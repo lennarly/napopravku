@@ -28,6 +28,7 @@ Route::middleware('auth:sanctum')->prefix('storage')->group(function () {
     Route::get('/list', [FileController::class, 'list']);
     Route::put('/files', [FileController::class, 'edit']);
     Route::delete('/files', [FileController::class, 'remove']);
+    Route::get('/download', [FileController::class, 'download']);
 
     Route::post('/folders', [FolderController::class, 'add']);
 });

@@ -8,6 +8,7 @@ use App\Rules\FileFormat;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -110,7 +111,7 @@ class FileController extends Controller
         $file = File::find($fileId);
         $file->delete();
 
-        Storage::delete($file->getFileName());
+        Storage::delete($file->getFullPath());
 
         return response()->json($file);
     }
@@ -143,5 +144,35 @@ class FileController extends Controller
         $file->save();
 
         return response()->json($file);
+    }
+
+    /**
+     * Download a file.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function download(Request $request): \Illuminate\Http\Response
+    {
+        $fileId = $request->get('id');
+        $userId = $request->user()->id;
+
+        $request->validate([
+            'id' => [
+                'required',
+                Rule::exists('files')->where(function ($query) use ($userId, $fileId) {
+                    return $query->where('id', $fileId)
+                        ->where('user_id', $userId);
+                }),
+            ]
+        ]);
+
+        $file = File::find($fileId);
+
+        $response = Response::make(Storage::get($file->getFullPath()));
+        $response->header('Content-Type', $file->mime);
+        $response->header('Content-disposition', 'attachment; filename="' . $file->original_name . '"');
+
+        return $response;
     }
 }

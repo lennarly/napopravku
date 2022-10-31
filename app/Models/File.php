@@ -50,7 +50,7 @@ class File extends Model
     /**
      * @return string
      */
-    public function getFileName()
+    public function getFullPath(): string
     {
         return sprintf("%s/%s.%s", $this->path, $this->name, $this->extension);
     }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\FileController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,4 +17,11 @@ Route::prefix('auth')->group(function () {
 
 Route::middleware('auth:sanctum')->prefix('user')->group(function () {
     Route::get('/info', [UserController::class, 'info']);
+});
+
+
+// Storage
+
+Route::middleware('auth:sanctum')->prefix('storage')->group(function () {
+    Route::post('/upload', [FileController::class, 'upload']);
 });

@@ -37,6 +37,16 @@ class FileController extends Controller
         $file = $request->file('file');
         $folder = $request->get('folder');
 
+        $userFiles = Auth::user()->files()->get();
+        $totalSize = $userFiles->sum('size');
+        $fileSize = $file->getSize();
+
+        if ($totalSize + $fileSize > 100000 * 1024) {
+            return response()->json([
+                'message' => 'All of your uploaded files are larger than 100MB.'
+            ], 500);
+        }
+
         $fileUuid = Str::uuid();
         $fileExtension = $file->getClientOriginalExtension();
         $fileName = $fileUuid . '.' . $fileExtension;

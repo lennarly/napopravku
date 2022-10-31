@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class File extends Model
 {
@@ -26,4 +27,18 @@ class File extends Model
     protected $hidden = [
         'name', 'mime', 'path', 'user_id', 'updated_at'
     ];
+
+    /**
+     * Get folder data.
+     *
+     * @return HasOne
+     */
+    public function folder(): HasOne
+    {
+        return $this->hasOne(
+            'App\Models\Folder',
+            'id',
+            'folder_id'
+        );
+    }
 }

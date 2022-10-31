@@ -70,4 +70,18 @@ class FileController extends Controller
 
         return response()->json($fileModel);
     }
+
+    /**
+     * Get a list of files.
+     *
+     * @return JsonResponse
+     */
+    public function list(): JsonResponse
+    {
+        $files = File::with('folder')
+            ->where('user_id', Auth::id())
+            ->get();
+
+        return response()->json($files);
+    }
 }

@@ -114,4 +114,34 @@ class FileController extends Controller
 
         return response()->json($file);
     }
+
+    /**
+     * Edit a file.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function edit(Request $request): JsonResponse
+    {
+        $fileId = $request->get('id');
+        $name = $request->get('name');
+        $userId = $request->user()->id;
+
+        $request->validate([
+            'id' => [
+                'required',
+                Rule::exists('files')->where(function ($query) use ($userId, $fileId) {
+                    return $query->where('id', $fileId)
+                        ->where('user_id', $userId);
+                }),
+            ],
+            'name' => 'required|digits_between:1,256'
+        ]);
+
+        $file = File::find($fileId);
+        $file->original_name = $name . '.' . $file->extension;
+        $file->save();
+
+        return response()->json($file);
+    }
 }

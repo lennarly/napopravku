@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\FileController;
+use App\Http\Controllers\Api\FolderController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,4 +26,6 @@ Route::middleware('auth:sanctum')->prefix('user')->group(function () {
 Route::middleware('auth:sanctum')->prefix('storage')->group(function () {
     Route::post('/upload', [FileController::class, 'upload']);
     Route::get('/list', [FileController::class, 'list']);
+
+    Route::post('/folders', [FolderController::class, 'add']);
 });

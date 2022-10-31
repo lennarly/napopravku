@@ -24,6 +24,11 @@ class File extends Model
      */
     public $timestamps = true;
 
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var array<int, string>
+     */
     protected $hidden = [
         'name', 'mime', 'path', 'user_id', 'updated_at'
     ];

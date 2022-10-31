@@ -46,4 +46,12 @@ class File extends Model
             'folder_id'
         );
     }
+
+    /**
+     * @return string
+     */
+    public function getFileName()
+    {
+        return sprintf("%s/%s.%s", $this->path, $this->name, $this->extension);
+    }
 }

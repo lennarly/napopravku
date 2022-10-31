@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class FileController extends Controller
 {
@@ -83,5 +84,34 @@ class FileController extends Controller
             ->get();
 
         return response()->json($files);
+    }
+
+    /**
+     * Delete a file.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function remove(Request $request): JsonResponse
+    {
+        $fileId = $request->get('id');
+        $userId = $request->user()->id;
+
+        $request->validate([
+            'id' => [
+                'required',
+                Rule::exists('files')->where(function ($query) use ($userId, $fileId) {
+                    return $query->where('id', $fileId)
+                        ->where('user_id', $userId);
+                }),
+            ]
+        ]);
+
+        $file = File::find($fileId);
+        $file->delete();
+
+        Storage::delete($file->getFileName());
+
+        return response()->json($file);
     }
 }

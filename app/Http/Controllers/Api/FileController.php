@@ -84,7 +84,7 @@ class FileController extends Controller
             Storage::delete($filePath . $fileName);
 
             return response()->json([
-                'message' => $filePath . $fileName
+                'message' => 'An error occurred while uploading the file.'
             ], 500);
         }
 

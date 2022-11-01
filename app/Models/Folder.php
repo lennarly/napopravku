@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Folder extends Model
 {
@@ -31,4 +32,18 @@ class Folder extends Model
     protected $fillable = [
         'name', 'user_id'
     ];
+
+    /**
+     * Get files data.
+     *
+     * @return HasMany
+     */
+    public function files(): HasMany
+    {
+        return $this->hasMany(
+            'App\Models\File',
+            'folder_id',
+            'id',
+        );
+    }
 }

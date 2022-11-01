@@ -42,5 +42,6 @@ Route::middleware('auth:sanctum')
     ->controller(FolderController::class)
     ->group(function () {
         Route::post('/folders', 'add');
+        Route::get('/folders', 'info');
     });
 

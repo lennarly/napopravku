@@ -37,4 +37,30 @@ class FolderController extends Controller
 
         return response()->json($folder);
     }
+
+    /**
+     * Get information about a folder.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function info(Request $request): JsonResponse
+    {
+        $userId = $request->user()->id;
+        $fields = $request->validate([
+            'id' => [
+                'required',
+                Rule::exists('folders')->where(function ($query) use ($userId) {
+                    return $query->where('user_id', $userId);
+                }),
+            ]
+        ]);
+
+        $folder = Folder::find($fields['id'])->files()->get();
+
+        return response()->json([
+            'count' => $folder->count(),
+            'size' => $folder->sum('size')
+        ]);
+    }
 }

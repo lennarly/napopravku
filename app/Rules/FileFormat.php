@@ -7,7 +7,6 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class FileFormat implements Rule
 {
-    const notAllowedFormats = ['php'];
 
     public function passes($attribute, $value): bool
     {
@@ -15,7 +14,7 @@ class FileFormat implements Rule
             return false;
         }
 
-        return !in_array($value->getClientOriginalExtension(), self::notAllowedFormats);
+        return !in_array($value->getClientOriginalExtension(), config('cloud.unavailable_file_formats', []));
     }
 
     public function message(): string

@@ -26,7 +26,7 @@ class DeleteExpiredFiles extends Command
      *
      * @return int
      */
-    public function handle()
+    public function handle(): int
     {
         $files = File::where('expires_at', '<', date('Y-m-d'))->get();
 

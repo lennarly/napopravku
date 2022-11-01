@@ -12,7 +12,7 @@ class UserController extends Controller
      * Get information about an authorized user.
      * @return JsonResponse
      */
-    public function info()
+    public function info(): JsonResponse
     {
         return response()->json(
             Auth::user()

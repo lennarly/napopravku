@@ -20,5 +20,5 @@ Route::get('/', function () {
 
 Route::controller(FileController::class)
     ->group(function () {
-        Route::get('/files/{id}', 'publicDownload')->whereUuid('id');;
+        Route::get('/files/{id}', 'publicDownload')->whereUuid('id')->name('public_download');
     });

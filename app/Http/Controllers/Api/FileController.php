@@ -39,7 +39,7 @@ class FileController extends Controller
         ]);
 
         $file = $fields['file'];
-        $folderId = $fields['folder_id'];
+        $folderId = $fields['folder_id'] ?? null;
 
         $userFiles = Auth::user()->files()->get();
         $totalSize = $userFiles->sum('size');
@@ -75,7 +75,7 @@ class FileController extends Controller
             $fileModel->size = $file->getSize();
             $fileModel->user_id = $userId;
             $fileModel->path = $filePath;
-            $fileModel->folder_id = $folderId ?? null;
+            $fileModel->folder_id = $folderId;
             $fileModel->expires_at = $fields['expires_at'] ?? null;
             $fileModel->save();
 
@@ -232,7 +232,7 @@ class FileController extends Controller
         $file->save();
 
         return response()->json([
-            'link' => url('/files/' . $file->link)
+            'link' => route('public_download', ['id' => $file->link])
         ]);
     }
 }

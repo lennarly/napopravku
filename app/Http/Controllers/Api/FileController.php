@@ -22,26 +22,30 @@ class FileController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function upload(Request $request)
+    public function upload(Request $request): JsonResponse
     {
-        $userId = Auth::id();
-        $request->validate([
+        $userId = $request->user()->id;
+        $fields = $request->validate([
             'file' => [
                 'required',
-                'max:20000',
+                'max:' . config('cloud.max_file_size', 2048),
                 new FileFormat()
             ],
-            'folder' => 'exists:folders,id,user_id,' . $userId
+            'folder_id' => Rule::exists('folders', 'id')
+                ->where(function ($query) use ($userId) {
+                    return $query->where('user_id', $userId);
+                }),
         ]);
 
-        $file = $request->file('file');
-        $folder = $request->get('folder');
+        $file = $fields['file'];
+        $folderId = $fields['folder_id'];
 
         $userFiles = Auth::user()->files()->get();
         $totalSize = $userFiles->sum('size');
         $fileSize = $file->getSize();
+        $maxTotalSize = config('cloud.user_max_total_size', 10240);
 
-        if ($totalSize + $fileSize > 100000 * 1024) {
+        if ($totalSize + $fileSize > $maxTotalSize * 1024) {
             return response()->json([
                 'message' => 'All of your uploaded files are larger than 100MB.'
             ], 500);
@@ -51,13 +55,15 @@ class FileController extends Controller
         $fileExtension = $file->getClientOriginalExtension();
         $fileName = $fileUuid . '.' . $fileExtension;
 
+        // Adding a leading zero
         $padUserId = str_pad($userId, 2, 0, STR_PAD_LEFT);
-        $padFolder = str_pad($folder, 2, 0, STR_PAD_LEFT);
+        $padFolder = str_pad($folderId, 2, 0, STR_PAD_LEFT);
+
         $filePath = sprintf("storage/%s/%s/", $padUserId, $padFolder);
 
         try {
             // Uploading a file to storage
-            Storage::putFileAs($filePath, $request->file('file'), $fileName);
+            Storage::putFileAs($filePath, $file, $fileName);
 
             // Creating a file entry in the database
             $fileModel = new File;
@@ -68,7 +74,7 @@ class FileController extends Controller
             $fileModel->size = $file->getSize();
             $fileModel->user_id = $userId;
             $fileModel->path = $filePath;
-            $fileModel->folder_id = $folder ?? null;
+            $fileModel->folder_id = $folderId ?? null;
             $fileModel->save();
 
         } catch (\Throwable $e) {
@@ -86,12 +92,13 @@ class FileController extends Controller
     /**
      * Get a list of files.
      *
+     * @param Request $request
      * @return JsonResponse
      */
-    public function list(): JsonResponse
+    public function list(Request $request): JsonResponse
     {
         $files = File::with('folder')
-            ->where('user_id', Auth::id())
+            ->where('user_id', $request->user()->id)
             ->get();
 
         return response()->json($files);
@@ -105,20 +112,17 @@ class FileController extends Controller
      */
     public function remove(Request $request): JsonResponse
     {
-        $fileId = $request->get('id');
         $userId = $request->user()->id;
-
-        $request->validate([
+        $fields = $request->validate([
             'id' => [
                 'required',
-                Rule::exists('files')->where(function ($query) use ($userId, $fileId) {
-                    return $query->where('id', $fileId)
-                        ->where('user_id', $userId);
+                Rule::exists('files')->where(function ($query) use ($userId) {
+                    return $query->where('user_id', $userId);
                 }),
             ]
         ]);
 
-        $file = File::find($fileId);
+        $file = File::find($fields['id']);
         $file->delete();
 
         Storage::delete($file->getFullPath());
@@ -134,23 +138,19 @@ class FileController extends Controller
      */
     public function edit(Request $request): JsonResponse
     {
-        $fileId = $request->get('id');
-        $name = $request->get('name');
         $userId = $request->user()->id;
-
-        $request->validate([
+        $fields = $request->validate([
             'id' => [
                 'required',
-                Rule::exists('files')->where(function ($query) use ($userId, $fileId) {
-                    return $query->where('id', $fileId)
-                        ->where('user_id', $userId);
+                Rule::exists('files')->where(function ($query) use ($userId) {
+                    return $query->where('user_id', $userId);
                 }),
             ],
-            'name' => 'required|digits_between:1,256'
+            'name' => 'required|string|min:1|max:255'
         ]);
 
-        $file = File::find($fileId);
-        $file->original_name = $name . '.' . $file->extension;
+        $file = File::find($fields['id']);
+        $file->original_name = $file->getNewName($fields['name']);
         $file->save();
 
         return response()->json($file);
@@ -164,22 +164,20 @@ class FileController extends Controller
      */
     public function download(Request $request): \Illuminate\Http\Response
     {
-        $fileId = $request->get('id');
         $userId = $request->user()->id;
-
-        $request->validate([
+        $fields = $request->validate([
             'id' => [
                 'required',
-                Rule::exists('files')->where(function ($query) use ($userId, $fileId) {
-                    return $query->where('id', $fileId)
-                        ->where('user_id', $userId);
+                Rule::exists('files')->where(function ($query) use ($userId) {
+                    return $query->where('user_id', $userId);
                 }),
             ]
         ]);
 
-        $file = File::find($fileId);
+        $file = File::find($fields['id']);
+        $fullPath = Storage::get($file->getFullPath());
 
-        $response = Response::make(Storage::get($file->getFullPath()));
+        $response = Response::make($fullPath);
         $response->header('Content-Type', $file->mime);
         $response->header('Content-disposition', 'attachment; filename="' . $file->original_name . '"');
 

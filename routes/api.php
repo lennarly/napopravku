@@ -9,26 +9,38 @@ use App\Http\Controllers\Api\AuthController;
 
 // Auth
 
-Route::prefix('auth')->group(function () {
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login']);
-});
+Route::prefix('auth')
+    ->controller(AuthController::class)
+    ->group(function () {
+        Route::post('/register', 'register');
+        Route::post('/login', 'login');
+    });
 
 // User
 
-Route::middleware('auth:sanctum')->prefix('user')->group(function () {
-    Route::get('/info', [UserController::class, 'info']);
-});
+Route::middleware('auth:sanctum')
+    ->controller(UserController::class)
+    ->group(function () {
+        Route::get('/user', 'info');
+    });
 
+// Files
 
-// Storage
+Route::middleware('auth:sanctum')
+    ->controller(FileController::class)
+    ->group(function () {
+        Route::post('/files', 'upload');
+        Route::get('/files', 'list');
+        Route::put('/files', 'edit');
+        Route::delete('/files', 'remove');
+        Route::get('/files/download', 'download');
+    });
 
-Route::middleware('auth:sanctum')->prefix('storage')->group(function () {
-    Route::post('/upload', [FileController::class, 'upload']);
-    Route::get('/list', [FileController::class, 'list']);
-    Route::put('/files', [FileController::class, 'edit']);
-    Route::delete('/files', [FileController::class, 'remove']);
-    Route::get('/download', [FileController::class, 'download']);
+// Folders
 
-    Route::post('/folders', [FolderController::class, 'add']);
-});
+Route::middleware('auth:sanctum')
+    ->controller(FolderController::class)
+    ->group(function () {
+        Route::post('/folders', 'add');
+    });
+

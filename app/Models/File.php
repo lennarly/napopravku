@@ -48,10 +48,23 @@ class File extends Model
     }
 
     /**
+     * Get the full path to a file.
+     *
      * @return string
      */
     public function getFullPath(): string
     {
         return sprintf("%s/%s.%s", $this->path, $this->name, $this->extension);
+    }
+
+    /**
+     * Get a new name with extension.
+     *
+     * @param $name
+     * @return string
+     */
+    public function getNewName($name): string
+    {
+        return sprintf("%s.%s", $name, $this->extension);
     }
 }

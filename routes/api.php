@@ -33,6 +33,7 @@ Route::middleware('auth:sanctum')
         Route::get('/files', 'list');
         Route::put('/files', 'edit');
         Route::delete('/files', 'remove');
+        Route::get('/files/generate', 'generate');
         Route::get('/files/download', 'download');
     });
 
@@ -43,5 +44,10 @@ Route::middleware('auth:sanctum')
     ->group(function () {
         Route::post('/folders', 'add');
         Route::get('/folders', 'info');
+    });
+
+Route::controller(FolderController::class)
+    ->group(function () {
+        Route::get('/folders/all', 'stats');
     });
 

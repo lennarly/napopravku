@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\File;
 use App\Models\Folder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -60,7 +61,22 @@ class FolderController extends Controller
 
         return response()->json([
             'count' => $folder->count(),
-            'size' => $folder->sum('size')
+            'size' => ceil($folder->sum('size') / 1024) . ' KB'
+        ]);
+    }
+
+    /**
+     * Get information about the whole disk.
+     *
+     * @return JsonResponse
+     */
+    public function stats(): JsonResponse
+    {
+        $files = File::all();
+
+        return response()->json([
+            'count' => $files->count(),
+            'size' => ceil($files->sum('size') / 1024) . ' KB'
         ]);
     }
 }

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Storage;
 
 class File extends Model
 {
@@ -66,5 +67,16 @@ class File extends Model
     public function getNewName($name): string
     {
         return sprintf("%s.%s", $name, $this->extension);
+    }
+
+    /**
+     * Delete with file.
+     *
+     * @return void
+     */
+    public function remove(): void
+    {
+        Storage::delete($this->getFullPath());
+        $this->delete();
     }
 }

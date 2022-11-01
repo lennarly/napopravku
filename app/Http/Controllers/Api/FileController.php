@@ -35,6 +35,7 @@ class FileController extends Controller
                 ->where(function ($query) use ($userId) {
                     return $query->where('user_id', $userId);
                 }),
+            'expires_at' => 'date_format:Y-m-d|after_or_equal:1920-01-01'
         ]);
 
         $file = $fields['file'];
@@ -75,6 +76,7 @@ class FileController extends Controller
             $fileModel->user_id = $userId;
             $fileModel->path = $filePath;
             $fileModel->folder_id = $folderId ?? null;
+            $fileModel->expires_at = $fields['expires_at'] ?? null;
             $fileModel->save();
 
         } catch (\Throwable $e) {
@@ -164,6 +166,7 @@ class FileController extends Controller
      */
     public function download(Request $request): \Illuminate\Http\Response
     {
+
         $userId = $request->user()->id;
         $fields = $request->validate([
             'id' => [
@@ -182,5 +185,54 @@ class FileController extends Controller
         $response->header('Content-disposition', 'attachment; filename="' . $file->original_name . '"');
 
         return $response;
+    }
+
+    /**
+     * Download a public file.
+     *
+     * @param $hash
+     * @return \Illuminate\Http\Response
+     */
+    public function publicDownload($hash): \Illuminate\Http\Response
+    {
+        $file = File::where('link', $hash)->first();
+        if (!$file) {
+            abort(404);
+        }
+
+        $fullPath = Storage::get($file->getFullPath());
+
+        $response = Response::make($fullPath);
+        $response->header('Content-Type', $file->mime);
+        $response->header('Content-disposition', 'attachment; filename="' . $file->original_name . '"');
+
+        return $response;
+    }
+
+    /**
+     * Generating a public link for a file.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function generate(Request $request): JsonResponse
+    {
+        $userId = $request->user()->id;
+        $fields = $request->validate([
+            'id' => [
+                'required',
+                Rule::exists('files')->where(function ($query) use ($userId) {
+                    return $query->where('user_id', $userId);
+                }),
+            ]
+        ]);
+
+        $file = File::find($fields['id']);
+        $file->link = Str::uuid();
+        $file->save();
+
+        return response()->json([
+            'link' => url('/files/' . $file->link)
+        ]);
     }
 }
